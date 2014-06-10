@@ -259,6 +259,16 @@ nesc_declaration load(source_language sl, location l,
   nesc_declare(decl);
 
   ptree = compile(l, decl, name, name_is_path);
+  if(ptree && (sl == l_any))
+  {
+      ast = CAST(nesc_decl, ptree);
+      if (decl->kind != ast->cdecl->kind)
+      {
+          decl->kind = ast->cdecl->kind;
+          ptree = compile(l, decl, name, name_is_path);
+      }
+  }
+
   if (ptree)
     {
       bool badkind;
