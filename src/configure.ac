@@ -16,13 +16,14 @@
 # 
 # You should have received a copy of the GNU General Public License
 # along with nesC; see the file COPYING.  If not, write to
-# the Free Software Foundation, 59 Temple Place - Suite 330,
-# Boston, MA 02111-1307, USA.
+# the Free Software Foundation, Inc., 51 Franklin St, Fifth Floor,
+# Boston, MA 02110-1301 USA.
 
 dnl -*- m4 -*-
 
 # force autoconf 2.5 on Debian systems
 AC_PREREQ(2.50)
+
 
 AC_INIT(nesc, 1.3.6-alpha)
 AC_CONFIG_AUX_DIR(../config-aux)
