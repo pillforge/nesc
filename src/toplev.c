@@ -126,7 +126,7 @@ static void pipe_closed (int signo)
 /* Print a fatal error message.  NAME is the text.
    Also include a system error message based on `errno'.  */
 
-
+
 /* Decode the string P as a language-specific option for C. */
 static bool c_option(char *p)
 {
@@ -153,49 +153,49 @@ static bool c_option(char *p)
   else if (!strcmp (p, "-w"))
     inhibit_warnings = 1;
   else if (!strcmp (p, "-Wimplicit"))
-    {
-      warn_implicit_int = 1;
-      if (mesg_implicit_function_declaration != 2)
-        mesg_implicit_function_declaration = 1;
-    }
+  {
+    warn_implicit_int = 1;
+    if (mesg_implicit_function_declaration != 2)
+      mesg_implicit_function_declaration = 1;
+  }
   else if (!strcmp (p, "-Wno-implicit"))
     warn_implicit_int = 0, mesg_implicit_function_declaration = 0;
   else if (!strcmp (p, "-W"))
-    {
-      extra_warnings = 1;
-      /* We save the value of warn_uninitialized, since if they put
-	 -Wuninitialized on the command line, we need to generate a
-	 warning about not using it without also specifying -O.  */
-      if (warn_uninitialized != 1)
-	warn_uninitialized = 2;
-    }
+  {
+    extra_warnings = 1;
+    /* We save the value of warn_uninitialized, since if they put
+    -Wuninitialized on the command line, we need to generate a
+    warning about not using it without also specifying -O.  */
+    if (warn_uninitialized != 1)
+      warn_uninitialized = 2;
+  }
   else if (!strcmp (p, "-Wall"))
-    {
-      /* We save the value of warn_uninitialized, since if they put
-	 -Wuninitialized on the command line, we need to generate a
-	 warning about not using it without also specifying -O.  */
-      if (warn_uninitialized != 1)
-	warn_uninitialized = 2;
-      warn_implicit_int = 1;
-      mesg_implicit_function_declaration = 1;
-      warn_return_type = 1;
-      warn_unused = 1;
-      warn_switch = 1;
-      warn_format = 1;
-      warn_char_subscripts = 1;
-      warn_parentheses = 1;
-      warn_missing_braces = 1;
-      /* We set this to 2 here, but 1 in -Wmain, so -ffreestanding can turn
-	 it off only if it's not explicit.  */
-      warn_main = 2;
+  {
+    /* We save the value of warn_uninitialized, since if they put
+    -Wuninitialized on the command line, we need to generate a
+    warning about not using it without also specifying -O.  */
+    if (warn_uninitialized != 1)
+      warn_uninitialized = 2;
+    warn_implicit_int = 1;
+    mesg_implicit_function_declaration = 1;
+    warn_return_type = 1;
+    warn_unused = 1;
+    warn_switch = 1;
+    warn_format = 1;
+    warn_char_subscripts = 1;
+    warn_parentheses = 1;
+    warn_missing_braces = 1;
+    /* We set this to 2 here, but 1 in -Wmain, so -ffreestanding can turn
+    it off only if it's not explicit.  */
+    warn_main = 2;
 
-      warn_trigraphs = 1;
-      warn_comments = 1;
-    }
+    warn_trigraphs = 1;
+    warn_comments = 1;
+  }
   else if (!strcmp (p, "-H"))
-    {
-      print_include_names = 1;
-    }
+  {
+    print_include_names = 1;
+  }
   else
     return FALSE;
 
@@ -208,7 +208,7 @@ static void rcc_aborting(int s)
 
   signal(SIGABRT, 0);
   fprintf(stderr, "nesC: Internal error.\n"
-    "Please submit an issue to the GitHub repository at https://github.com/tinyos/nesc\n");
+          "Please submit an issue to the GitHub repository at https://github.com/tinyos/nesc\n");
   where = current_location();
   if (where != dummy_location)
     fprintf(stderr, "Current location (guess): %s:%lu\n", where->filename, where->lineno);
@@ -217,7 +217,7 @@ static void rcc_aborting(int s)
   else
     exit(FATAL_EXIT_CODE);
 }
-
+
 /* Entry point of cc1/c++.  Decode command args, then call compile_file.
    Exit code is 35 if can't open files, 34 if fatal error,
    33 if had nonfatal errors, else success.  */
@@ -245,10 +245,10 @@ int region_main(int argc, char **argv) deletes
    */
   waitforgdb = getenv("NCCGDB");
   if (waitforgdb)
-    {
-      fprintf(stderr, "ncc pid %d waiting for gdb attach\n", getpid());
-      poll(0, 0, -1); // should return with EINTR
-    }
+  {
+    fprintf(stderr, "ncc pid %d waiting for gdb attach\n", getpid());
+    poll(0, 0, -1); // should return with EINTR
+  }
 #endif
 
   signal(SIGABRT, rcc_aborting);
@@ -263,9 +263,9 @@ int region_main(int argc, char **argv) deletes
   p = argv[0] + strlen (argv[0]);
   while (p != argv[0] && p[-1] != '/'
 #ifdef DIR_SEPARATOR
-	 && p[-1] != DIR_SEPARATOR
+  && p[-1] != DIR_SEPARATOR
 #endif
-	 )
+        )
     --p;
   progname = p;
 
@@ -276,88 +276,88 @@ int region_main(int argc, char **argv) deletes
   flag_signed_char = 2; /* Detect if user specifies a value */
 
   for (i = 1; i < argc; )
+  {
+    int j;
+
+    if (c_option(argv[i]) || nesc_option(argv[i]))
+      i++;
+    else if (argv[i][0] == '-' && argv[i][1] != 0)
     {
-      int j;
+      char *str = argv[i++] + 1;
+      char *arg = NULL;
 
-      if (c_option(argv[i]) || nesc_option(argv[i]))
-	i++;
-      else if (argv[i][0] == '-' && argv[i][1] != 0)
-	{
-	  char *str = argv[i++] + 1;
-	  char *arg = NULL;
+      if (strchr(OPTS_WITH_ARGS, str[0]))
+      {
+        if (!str[1])
+          if (i < argc)
+            arg = argv[i++];
+          else
+          {
+            str = "";
+            error("argument to `-%c' is missing", str[0]);
+          }
+        else
+          arg = str + 1;
+      }
 
-	  if (strchr(OPTS_WITH_ARGS, str[0]))
-	    {
-	      if (!str[1])
-		if (i < argc)
-		  arg = argv[i++];
-		else
-		  {
-		    str = "";
-		    error("argument to `-%c' is missing", str[0]);
-		  }
-	      else
-		arg = str + 1;
-	    }
+      for (j = 0; j < sizeof opts_with_args / sizeof * opts_with_args; j++)
+        if (!strcmp(str, opts_with_args[j]))
+        {
+          if (i < argc)
+            arg = argv[i++];
+          else
+          {
+            str = "";
+            error("argument to `-%s' is missing", str);
+          }
+          break;
+        }
 
-	  for (j = 0; j < sizeof opts_with_args / sizeof *opts_with_args; j++)
-	    if (!strcmp(str, opts_with_args[j]))
-	      {
-		if (i < argc)
-		  arg = argv[i++];
-		else
-		  {
-		    str = "";
-		    error("argument to `-%s' is missing", str);
-		  }
-		break;
-	      }
+      if (str[0] == 'o')
+        targetfile = arg;
+      else if (str[0] == 'I')
+        add_nesc_dir(arg, CHAIN_BRACKET);
+      else if (str[0] == 'D' || str[0] == 'U' || str[0] == 'A')
+        save_cpp_option(str, arg);
+      else if (str[0] == 'f' || str[0] == 'W')
+      {
+        char kind = str[0];
+        char *p = &str[1];
 
-	  if (str[0] == 'o')
-	    targetfile = arg;
-	  else if (str[0] == 'I')
-	    add_nesc_dir(arg, CHAIN_BRACKET);
-	  else if (str[0] == 'D' || str[0] == 'U' || str[0] == 'A')
-	    save_cpp_option(str, arg);
-	  else if (str[0] == 'f' || str[0] == 'W')
-	    {
-	      char kind = str[0];
-	      char *p = &str[1];
-
-	      /* Some kind of -f or -W option.
-		 p's value is the option sans -f/W.
-		 Search for it in the table of options.  */
-	      for (j = 0;
-		   j < sizeof (fW_options) / sizeof (fW_options[0]);
-		   j++)
-		{
-		  if (kind == fW_options[j].c &&
-		      !strcmp (p, fW_options[j].string))
-		    {
-		      *fW_options[j].variable = fW_options[j].on_value;
-		      break;
-		    }
-		  if (kind == fW_options[j].c &&
-		      p[0] == 'n' && p[1] == 'o' && p[2] == '-' &&
-		      !strcmp (p+3, fW_options[j].string))
-		    {
-		      *fW_options[j].variable = ! fW_options[j].on_value;
-		      break;
-		    }
-		}
-	    }
-	  else if (!strcmp(str, "include"))
-	    add_nesc_include(arg, TRUE);
-	}
-      else
-	filename = argv[i++];
+        /* Some kind of -f or -W option.
+        p's value is the option sans -f/W.
+        Search for it in the table of options.  */
+        for (j = 0;
+             j < sizeof (fW_options) / sizeof (fW_options[0]);
+             j++)
+        {
+          if (kind == fW_options[j].c &&
+              !strcmp (p, fW_options[j].string))
+          {
+            *fW_options[j].variable = fW_options[j].on_value;
+            break;
+          }
+          if (kind == fW_options[j].c &&
+              p[0] == 'n' && p[1] == 'o' && p[2] == '-' &&
+              !strcmp (p + 3, fW_options[j].string))
+          {
+            *fW_options[j].variable = ! fW_options[j].on_value;
+            break;
+          }
+        }
+      }
+      else if (!strcmp(str, "include"))
+        add_nesc_include(arg, TRUE);
     }
+    else
+      filename = argv[i++];
+  }
 
   /* Pass options on to the target too (this a bit hacky, but fine so far) */
   if (target->handle_option)
     for (i = 1; i < argc; i++)
       if (argv[i][0] == '-' && argv[i][1] != 0)
-	target->handle_option(argv[i]);
+        target->handle_option(argv[i]);
 
   if (target->preinit)
     target->preinit();
@@ -368,10 +368,10 @@ int region_main(int argc, char **argv) deletes
   if (filename)
     nesc_compile (filename, targetfile);
   else
-    {
-      fprintf(stderr, "usage: %s [options] <filename>\n", argv[0]);
-      exit(FATAL_EXIT_CODE);
-    }
+  {
+    fprintf(stderr, "usage: %s [options] <filename>\n", argv[0]);
+    exit(FATAL_EXIT_CODE);
+  }
 
   if (errorcount)
     exit (FATAL_EXIT_CODE);

@@ -40,16 +40,16 @@ static void rec_async(gnode n, bool async_caller)
 
   /* Martin Leopold: add an "async" gcc attribute to any async elements for targets
      that need to identify functions callable from interrupts. */
-  if (fn->definition && target->async_functions_atribute) 
-    {
-      function_decl fd = CAST(function_decl, fn->definition);
-      location l = fd->modifiers->location;
-      region r = parse_region;
-      word aname = new_word(r, l, str2cstring(r, target->async_functions_atribute));
-      target_attribute attr = new_target_attribute(r, l, aname, NULL);
+  if (fn->definition && target->async_functions_atribute)
+  {
+    function_decl fd = CAST(function_decl, fn->definition);
+    location l = fd->modifiers->location;
+    region r = parse_region;
+    word aname = new_word(r, l, str2cstring(r, target->async_functions_atribute));
+    target_attribute attr = new_target_attribute(r, l, aname, NULL);
 
-      fd->attributes = attribute_chain(attr, fd->attributes);
-    }
+    fd->attributes = attribute_chain(attr, fd->attributes);
+  }
 
   /* We don't pass async through commands or events that are not
      declared async to avoid reporting errors for the fns called
@@ -57,9 +57,9 @@ static void rec_async(gnode n, bool async_caller)
   if (ddecl_is_command_or_event(fn))
     async = fn->async;
 
-  graph_scan_out (edge, n) 
-    if (is_call_edge(edge))
-      rec_async(graph_edge_to(edge), async);
+  graph_scan_out (edge, n)
+  if (is_call_edge(edge))
+    rec_async(graph_edge_to(edge), async);
 }
 
 void async_violation(gnode n)
@@ -68,15 +68,15 @@ void async_violation(gnode n)
   gedge edge;
 
   graph_scan_in (edge, n)
-    if (is_call_edge(edge))
-      {
-	use u = EDGE_GET(use, edge);
-	data_declaration caller = NODE_GET(endp, graph_edge_from(edge))->function;
+  if (is_call_edge(edge))
+  {
+    use u = EDGE_GET(use, edge);
+    data_declaration caller = NODE_GET(endp, graph_edge_from(edge))->function;
 
-	if (caller->actual_async)
-	  nesc_warning_with_location(u->l, "`%s' called asynchronously from `%s'",
-				     decl_printname(fn), decl_printname(caller));
-      }
+    if (caller->actual_async)
+      nesc_warning_with_location(u->l, "`%s' called asynchronously from `%s'",
+                                 decl_printname(fn), decl_printname(caller));
+  }
 }
 
 
@@ -84,21 +84,21 @@ void check_async(cgraph callgraph)
 {
   ggraph cg = cgraph_graph(callgraph);
   gnode n;
-  
+
   /* Find least fixed point of async w/ recursive graph walk */
   graph_scan_nodes (n, cg)
-    rec_async(n, FALSE);
+  rec_async(n, FALSE);
 
   /* Report violations of async. We force async warnings when detecting
      data races. */
   if (warn_async || warn_data_race)
     graph_scan_nodes (n, cg)
-      {
-	data_declaration fn = NODE_GET(endp, n)->function;
+  {
+    data_declaration fn = NODE_GET(endp, n)->function;
 
-	if (ddecl_is_command_or_event(fn) && fn->actual_async && !fn->async)
-	  async_violation(n);
-      }
+    if (ddecl_is_command_or_event(fn) && fn->actual_async && !fn->async)
+      async_violation(n);
+  }
 }
 
 static dd_list find_async_variables(region r, cgraph callgraph)
@@ -113,30 +113,30 @@ static dd_list find_async_variables(region r, cgraph callgraph)
   /* XXX: aliasing issues ignored for now. */
 
   graph_scan_nodes (n, cg)
-    {
-      data_declaration fn = NODE_GET(endp, n)->function;
-      dd_list_pos use;
-      
-      if (fn->actual_async && fn->fn_uses)
-	dd_scan (use, fn->fn_uses)
-	  {
-	    iduse i = DD_GET(iduse, use);
-	    data_declaration id = i->id;
-	    context c = i->u->c;
+  {
+    data_declaration fn = NODE_GET(endp, n)->function;
+    dd_list_pos use;
 
-	    if (id->kind == decl_variable && !id->islocal &&
-		c & (c_read | c_write))
-	      {
-		if (!id->async_access)
-		  {
-		    id->async_access = TRUE;
-		    dd_add_last(r, avars, id);
-		  }
-		if (c & c_write)
-		  id->async_write = TRUE;
-	      }
-	  }
+    if (fn->actual_async && fn->fn_uses)
+      dd_scan (use, fn->fn_uses)
+    {
+      iduse i = DD_GET(iduse, use);
+      data_declaration id = i->id;
+      context c = i->u->c;
+
+      if (id->kind == decl_variable && !id->islocal &&
+          c & (c_read | c_write))
+      {
+        if (!id->async_access)
+        {
+          id->async_access = TRUE;
+          dd_add_last(r, avars, id);
+        }
+        if (c & c_write)
+          id->async_write = TRUE;
+      }
     }
+  }
   return avars;
 }
 
@@ -145,38 +145,38 @@ static void rec_contexts(gnode n, int call_contexts)
   gedge edge;
   data_declaration fn = NODE_GET(endp, n)->function;
   int new_context = fn->call_contexts | fn->extra_contexts |
-    call_contexts | fn->spontaneous;
+                    call_contexts | fn->spontaneous;
 
   if (new_context == fn->call_contexts)
     return;
   fn->call_contexts = new_context;
 
-  graph_scan_out (edge, n) 
-    {
-      use u = EDGE_GET(use, edge);
-      int cc = new_context;
+  graph_scan_out (edge, n)
+  {
+    use u = EDGE_GET(use, edge);
+    int cc = new_context;
 
-      if (u->c & c_fncall)
-	{
-	  if (u->c & c_atomic)
-	    cc = c_call_atomic;
-	}
-      else /* Non-call use. Conservatively assume that there may be
-	      atomic and non-atomic calls if this value ends up used as
-	      a function pointer */
-	cc = c_call_atomic | c_call_nonatomic;
-      rec_contexts(graph_edge_to(edge), cc);
+    if (u->c & c_fncall)
+    {
+      if (u->c & c_atomic)
+        cc = c_call_atomic;
     }
+    else /* Non-call use. Conservatively assume that there may be
+        atomic and non-atomic calls if this value ends up used as
+        a function pointer */
+      cc = c_call_atomic | c_call_nonatomic;
+    rec_contexts(graph_edge_to(edge), cc);
+  }
 }
 
 static void find_fn_contexts(cgraph callgraph)
 {
   ggraph cg = cgraph_graph(callgraph);
   gnode n;
-  
+
   /* Find least fixed point of call_contexts w/ recursive graph walk */
   graph_scan_nodes (n, cg)
-    rec_contexts(n, 0);
+  rec_contexts(n, 0);
 }
 
 static void check_async_vars(dd_list avars)
@@ -184,57 +184,57 @@ static void check_async_vars(dd_list avars)
   dd_list_pos avar;
 
   dd_scan (avar, avars)
+  {
+    data_declaration v = DD_GET(data_declaration, avar);
+    dd_list_pos ause;
+    bool first = TRUE;
+
+    if (!v->norace)
+      dd_scan (ause, v->nuses)
     {
-      data_declaration v = DD_GET(data_declaration, avar);
-      dd_list_pos ause;
-      bool first = TRUE;
+      use u = DD_GET(use, ause);
+      context bad_contexts = c_write;
 
-      if (!v->norace)
-	dd_scan (ause, v->nuses)
-	  {
-	    use u = DD_GET(use, ause);
-	    context bad_contexts = c_write;
+      /* If there are no writes in async contexts, then reads
+         need not be protected */
+      if (v->async_write)
+        bad_contexts |= c_read;
 
-	    /* If there are no writes in async contexts, then reads
-	       need not be protected */
-	    if (v->async_write)
-	      bad_contexts |= c_read;
+      /* Bad uses are uses that are both:
+         - outside atomic statements (and fns only called from atomic
+           statements)
+         - uses specified by bad_contexts
+         u->fn can be NULL in weird cases which don't correspond to
+         executable code.
+      */
+      if (u->fn &&
+          !(u->c & c_atomic ||
+            !(u->fn->call_contexts & c_call_nonatomic))
+          && u->c & bad_contexts)
+      {
+        const char *cname;
 
-	    /* Bad uses are uses that are both:
-	       - outside atomic statements (and fns only called from atomic
-	         statements)
-	       - uses specified by bad_contexts
-	       u->fn can be NULL in weird cases which don't correspond to
-	       executable code.
-	    */
-	    if (u->fn &&
-		!(u->c & c_atomic ||
-		  !(u->fn->call_contexts & c_call_nonatomic))
-		&& u->c & bad_contexts)
-	      {
-		const char *cname;
+        if (first)
+        {
+          location vloc =
+            v->definition ? v->definition->location : v->ast->location;
+          first = FALSE;
+          nesc_warning_with_location
+          (vloc, "non-atomic accesses to shared variable `%s':",
+           v->name);
+        }
 
-		if (first)
-		  {
-		    location vloc =
-		      v->definition ? v->definition->location : v->ast->location;
-		    first = FALSE;
-		    nesc_warning_with_location
-		      (vloc, "non-atomic accesses to shared variable `%s':",
-		       v->name);
-		  }
-
-		if ((u->c & (c_read | c_write)) == (c_read | c_write) &&
-		    v->async_write)
-		  cname = "r/w";
-		else if (u->c & c_read)
-		  cname = "read";
-		else
-		  cname = "write";
-		nesc_warning_with_location(u->l, "  non-atomic %s", cname);
-	      }
-	  }
+        if ((u->c & (c_read | c_write)) == (c_read | c_write) &&
+            v->async_write)
+          cname = "r/w";
+        else if (u->c & c_read)
+          cname = "read";
+        else
+          cname = "write";
+        nesc_warning_with_location(u->l, "  non-atomic %s", cname);
+      }
     }
+  }
 }
 
 void check_races(cgraph callgraph)
@@ -245,7 +245,7 @@ void check_races(cgraph callgraph)
   /* First we mark all variables which are accessed in an async function.
      Then, we issue a warning for all uses of such variables which are not
      in an atomic context. To do that, we first need to know which contexts
-     (atomic vs non-atomic) each function is called in. 
+     (atomic vs non-atomic) each function is called in.
      Exception: read-only variables do not need warnings.
   */
 
@@ -257,4 +257,3 @@ void check_races(cgraph callgraph)
 
   deleteregion(r);
 }
-
