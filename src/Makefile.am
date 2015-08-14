@@ -143,6 +143,8 @@ libparser_a_SOURCES =				\
 	nesc-gcc.h				\
 	nesc-generate.c				\
 	nesc-generate.h				\
+	nesc-module-data.c			\
+	nesc-module-data.h			\
 	nesc-inline.c				\
 	nesc-inline.h				\
 	nesc-interface.c			\
