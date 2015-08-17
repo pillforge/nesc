@@ -3,6 +3,9 @@
 #ifndef NESC_MODULE_DATA
 #define NESC_MODULE_DATA
 
+#include "regions.h"
+#include "dd_list.h"
+
 void get_data(dd_list modules);
 
 #endif
