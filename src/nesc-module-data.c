@@ -33,7 +33,7 @@
 static int debug = 1;
 
 void process_module_for_data(nesc_declaration mod) {
-	if (debug && strcmp(mod->name, "BlinkC")) return;
+//	if (debug && strcmp(mod->name, "SchedulerBasicP")) return;
 	if (debug) printf("Processing module %s\n", mod->name);
 
 	env_scanner scanifs;
@@ -58,6 +58,18 @@ void process_module_for_data(nesc_declaration mod) {
 					dd_list_pos ause;
 					dd_scan (ause, fndecl->nuses) {
 						use u = DD_GET(use, ause);
+						if (u && u->fn && u->fn->name && u->fn->interface && u->fn->interface->name) {
+							switch(fndecl->ftype) {
+							case function_event:
+								printf("      Signalled by %s of %s\n", u->fn->name, u->fn->interface->name);
+								break;
+							case function_command:
+								printf("      Called by %s of %s\n", u->fn->name, u->fn->interface->name);
+								break;
+							default:
+								break;
+							}
+						}
 					}
 				}
 			}
