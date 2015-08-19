@@ -36,6 +36,7 @@ FILE *fp;
 int indent_length = 0;
 int first_module = TRUE;
 int first_interface;
+int first_decl;
 
 void print_indent () {
 	int i = 0;
@@ -56,7 +57,9 @@ void print_key (int *is_first, const char *name) {
 void print_beg() {
 	fprintf(fp, " {\n");
 }
-void print_end() {
+void print_end(int new_line) {
+	if (new_line)
+		fprintf(fp, "\n");
 	print_indent();
 	fprintf(fp, "}");
 }
@@ -97,14 +100,42 @@ void process_interface_for_data(const char *ifname, data_declaration idecl) {
 			process_function_for_data(fnname, fnentry);
 		}
 		indent_length -= 2;
-		print_end();
+		print_end(FALSE);
 
 	}
 }
 
+void process_declaration(declaration d) {
+	if (d->kind == kind_data_decl) {
+		data_decl dd = (data_decl)d;
+		declaration vd;
+		scan_declaration (vd, dd->decls) {
+			variable_decl vdd = CAST(variable_decl, vd);
+			data_declaration vdecl = vdd->ddecl;
+			if (debug) printf("  %s\n", vdecl->name);
+			print_key(&first_decl, vdecl->name);
+			print_beg();
+			print_end(FALSE);
+		}
+	}
+}
+
+void process_module_for_variables (const char *name, declaration dlist) {
+	declaration d;
+	char key[strlen(name) + 12];
+	strcpy(key, name);
+	strcat(key, "__variables");
+	print_key(&first_interface, key);
+	print_beg();
+	indent_length += 2;
+	scan_declaration (d, dlist)
+		process_declaration(d);
+	indent_length -= 2;
+	print_end(TRUE);
+}
 
 void process_module_for_data(nesc_declaration mod) {
-//	if (debug && strcmp(mod->name, "SchedulerBasicP")) return;
+//	if (debug && strcmp(mod->name, "BlinkC")) return;
 	if (debug) printf("Processing module %s\n", mod->name);
 	env_scanner scanifs;
 	const char *ifname;
@@ -118,9 +149,10 @@ void process_module_for_data(nesc_declaration mod) {
 	while (env_next(&scanifs, &ifname, &ifentry)) {
 		process_interface_for_data(ifname, ifentry);
 	}
+	first_decl = TRUE;
+	process_module_for_variables(mod->name, CAST(module, mod->impl)->decls);
 	indent_length -= 2;
-	fprintf(fp, "\n");
-	print_end();
+	print_end(TRUE);
 
 	if (debug) printf("\n");
 }
