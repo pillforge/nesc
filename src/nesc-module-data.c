@@ -36,6 +36,8 @@ FILE *fp;
 int indent_length = 0;
 int first_module = TRUE;
 int first_interface;
+int first_function;
+int first_caller;
 int first_decl;
 
 void print_indent () {
@@ -57,6 +59,11 @@ void print_key (int *is_first, const char *name) {
 void print_beg() {
 	fprintf(fp, " {\n");
 }
+
+void print_a_beg() {
+	fprintf(fp, " [\n");
+}
+
 void print_end(int new_line) {
 	if (new_line)
 		fprintf(fp, "\n");
@@ -64,25 +71,51 @@ void print_end(int new_line) {
 	fprintf(fp, "}");
 }
 
+void print_a_end() {
+	fprintf(fp, "\n");
+	print_indent();
+	fprintf(fp, "]");
+}
+
+void print_a_caller(char *type, const char *iname, const char *fname) {
+	if (first_caller) {
+		first_caller = FALSE;
+	} else {
+		fprintf(fp, ",\n");
+	}
+	print_indent();
+	fprintf(fp, "[\"%s\", \"%s\", \"%s\"]", type, iname, fname);
+}
+
 void process_function_for_data(const char *fnname, data_declaration fndecl) {
 	if (fndecl->use_summary & c_fncall) {
 		if (debug) printf("    %s\n", fnname);
 		dd_list_pos ause;
+		print_key(&first_function, fnname);
+		print_a_beg();
+		indent_length += 2;
+		first_caller = TRUE;
 		dd_scan (ause, fndecl->nuses) {
 			use u = DD_GET(use, ause);
 			if (u && u->fn && u->fn->name && u->fn->interface && u->fn->interface->name) {
+				char *ftype;
 				switch(fndecl->ftype) {
 				case function_event:
-					printf("      Signalled by %s of %s\n", u->fn->name, u->fn->interface->name);
+					if (debug) printf("      Signalled by %s of %s\n", u->fn->name, u->fn->interface->name);
+					ftype = "signal";
 					break;
 				case function_command:
-					printf("      Called by %s of %s\n", u->fn->name, u->fn->interface->name);
+					if (debug) printf("      Called by %s of %s\n", u->fn->name, u->fn->interface->name);
+					ftype = "call";
 					break;
 				default:
 					break;
 				}
+				print_a_caller(ftype, u->fn->interface->name, u->fn->name);
 			}
 		}
+		indent_length -= 2;
+		print_a_end();
 	}
 }
 
@@ -96,11 +129,12 @@ void process_interface_for_data(const char *ifname, data_declaration idecl) {
 		print_key(&first_interface, ifname);
 		print_beg();
 		indent_length += 2;
+		first_function = TRUE;
 		while (env_next(&scanfns, &fnname, &fnentry)) {
 			process_function_for_data(fnname, fnentry);
 		}
 		indent_length -= 2;
-		print_end(FALSE);
+		print_end(TRUE);
 
 	}
 }
