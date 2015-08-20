@@ -30,8 +30,9 @@
 //#include "env.h"
 //#include <stdio.h>
 
-static int debug = 1;
+static int debug = 0;
 
+char *fname;
 FILE *fp;
 int indent_length = 0;
 int first_module = TRUE;
@@ -195,7 +196,7 @@ void process_module_for_data(nesc_declaration mod) {
 void get_data(dd_list modules) {
 	if (debug) printf("get_data()\n");
 	dd_list_pos mod;
-	fp = fopen("calls.json", "w");
+	fp = fopen(fname, "w");
 
 	fprintf(fp, "{\n");
 	indent_length += 2;
@@ -204,4 +205,12 @@ void get_data(dd_list modules) {
 
 	fprintf(fp, "\n}\n");
 	fclose(fp);
+}
+
+void set_calls_filename(char *filename) {
+	fname = filename;
+}
+
+int get_calls_defined() {
+	return fname != NULL;
 }

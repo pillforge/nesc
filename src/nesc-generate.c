@@ -32,6 +32,7 @@ Boston, MA 02110-1301 USA.  */
 #include "nesc-network.h"
 #include "nesc-atomic.h"
 #include "nesc-cpp.h"
+#include "nesc-module-data.h"
 
 static void prt_nesc_function_hdr(data_declaration fn_decl,
                                   psd_options options)
@@ -1290,7 +1291,7 @@ void generate_c_code(const char *target_name, nesc_declaration program,
     }
   }
 
-  include_support_functions();
+  include_support_functions(); // added to spontanous calls
 
   unparse_start(output ? output : stdout, diff_file);
   disable_line_directives();
@@ -1313,6 +1314,7 @@ void generate_c_code(const char *target_name, nesc_declaration program,
 
   /* We start by finding each module's identifier uses and connections
      and marking uncallable functions */
+  // nuses is populated here!!
   collect_uses(all_cdecls);
   handle_network_types(all_cdecls);
   dd_scan (mod, modules)
@@ -1329,6 +1331,8 @@ void generate_c_code(const char *target_name, nesc_declaration program,
 
     find_connections(cg, m);
   }
+  if (get_calls_defined())
+		get_data(modules);
 
   /* Then we set the 'isused' bit on all functions that are reachable
      from spontaneous_calls or global_uses */
@@ -1339,6 +1343,7 @@ void generate_c_code(const char *target_name, nesc_declaration program,
   isatomic(callgraph);
 
   inline_functions(callgraph);
+
 
   /* Then we print the code. */
   /* The C declarations first */
@@ -1355,10 +1360,10 @@ void generate_c_code(const char *target_name, nesc_declaration program,
   enable_line_directives();
 
   dd_scan (mod, modules)
-  prt_nesc_function_declarations(DD_GET(nesc_declaration, mod));
+  	  prt_nesc_function_declarations(DD_GET(nesc_declaration, mod));
 
   dd_scan (mod, modules)
-  prt_nesc_module(cg, DD_GET(nesc_declaration, mod));
+  	  prt_nesc_module(cg, DD_GET(nesc_declaration, mod));
 
   prt_inline_functions(callgraph);
   prt_noninline_functions(callgraph);

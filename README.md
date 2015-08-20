@@ -32,3 +32,7 @@ Usage
 
 Please reference `man nescc`.
 
+
+Additional Options
+-----
+If a filename is provided with the option `-get-calls=<filename>`, the callgraph and variables of modules are dumped as a Json file.

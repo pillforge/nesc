@@ -73,6 +73,9 @@ for ($i = 0; $i <= $#ARGV; $i++) {
 	    $delcfile = 1;
 	  }
 	}
+	elsif (/^-get-calls/) {
+		push @nesc_args, $_;
+	}
 	else {
 	    push @gcc_args, $_;
 	}

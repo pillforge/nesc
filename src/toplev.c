@@ -34,6 +34,7 @@ Boston, MA 02110-1301 USA. */
 #include "nesc-cpp.h"
 #include "nesc-msg.h"
 #include "nesc-doc.h"
+#include "nesc-module-data.h"
 
 #if HAVE_POLL
 #include <sys/poll.h>
@@ -348,6 +349,9 @@ int region_main(int argc, char **argv) deletes
       }
       else if (!strcmp(str, "include"))
         add_nesc_include(arg, TRUE);
+      else if (!strncmp(str, "get-calls", strlen("get-calls"))) {
+        set_calls_filename(str + strlen("get-calls") + 1);
+      }
     }
     else
       filename = argv[i++];

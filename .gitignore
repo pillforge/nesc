@@ -80,3 +80,9 @@ src/nesc-dspec.tab.c
 src/nesc-dspec.tab.h
 src/nesc1
 tools/nesc.jar
+
+# Eclipse
+.cproject
+.project
+.settings/
+
