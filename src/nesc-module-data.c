@@ -35,6 +35,7 @@ static int debug = 0;
 char *fname;
 FILE *fp;
 int indent_length = 0;
+int indent_increment = 2;
 int first_module = TRUE;
 int first_interface;
 int first_function;
@@ -47,12 +48,24 @@ void print_indent () {
 		fprintf(fp, " ");
 }
 
-void print_key (int *is_first, const char *name) {
+void increase_indent () {
+	indent_length += indent_increment;
+}
+
+void decrease_indent () {
+	indent_length -= indent_increment;
+}
+
+void print_update_first(int *is_first) {
 	if (*is_first) {
 		*is_first = FALSE;
 	} else {
 		fprintf(fp, ",\n");
 	}
+}
+
+void print_key (int *is_first, const char *name) {
+	print_update_first(is_first);
 	print_indent();
 	fprintf(fp, "\"%s\":", name);
 }
@@ -78,12 +91,8 @@ void print_a_end() {
 	fprintf(fp, "]");
 }
 
-void print_a_caller(char *type, const char *iname, const char *fname) {
-	if (first_caller) {
-		first_caller = FALSE;
-	} else {
-		fprintf(fp, ",\n");
-	}
+void print_a_caller(int *is_first, const char *type, const char *iname, const char *fname) {
+	print_update_first(is_first);
 	print_indent();
 	fprintf(fp, "[\"%s\", \"%s\", \"%s\"]", type, iname, fname);
 }
@@ -94,28 +103,28 @@ void process_function_for_data(const char *fnname, data_declaration fndecl) {
 		dd_list_pos ause;
 		print_key(&first_function, fnname);
 		print_a_beg();
-		indent_length += 2;
+		increase_indent();
 		first_caller = TRUE;
 		dd_scan (ause, fndecl->nuses) {
 			use u = DD_GET(use, ause);
 			if (u && u->fn && u->fn->name && u->fn->interface && u->fn->interface->name) {
-				char *ftype;
+				char ftype[7] = "";
 				switch(fndecl->ftype) {
 				case function_event:
 					if (debug) printf("      Signalled by %s of %s\n", u->fn->name, u->fn->interface->name);
-					ftype = "signal";
+					strcat(ftype, "signal");
 					break;
 				case function_command:
 					if (debug) printf("      Called by %s of %s\n", u->fn->name, u->fn->interface->name);
-					ftype = "call";
+					strcat(ftype, "call");
 					break;
 				default:
 					break;
 				}
-				print_a_caller(ftype, u->fn->interface->name, u->fn->name);
+				print_a_caller(&first_caller, ftype, u->fn->interface->name, u->fn->name);
 			}
 		}
-		indent_length -= 2;
+		decrease_indent();
 		print_a_end();
 	}
 }
@@ -129,12 +138,12 @@ void process_interface_for_data(const char *ifname, data_declaration idecl) {
 		interface_scan(idecl, &scanfns);
 		print_key(&first_interface, ifname);
 		print_beg();
-		indent_length += 2;
+		increase_indent();
 		first_function = TRUE;
 		while (env_next(&scanfns, &fnname, &fnentry)) {
 			process_function_for_data(fnname, fnentry);
 		}
-		indent_length -= 2;
+		decrease_indent();
 		print_end(TRUE);
 
 	}
@@ -149,8 +158,23 @@ void process_declaration(declaration d) {
 			data_declaration vdecl = vdd->ddecl;
 			if (debug) printf("  %s\n", vdecl->name);
 			print_key(&first_decl, vdecl->name);
-			print_beg();
-			print_end(FALSE);
+			print_a_beg();
+			dd_list_pos ause;
+			int first_variable_detail = TRUE;
+			if (vdecl->nuses) {
+				increase_indent();
+				dd_scan (ause, vdecl->nuses) {
+					use u = DD_GET(use, ause);
+					if (u && u-> fn && u->fn->name && u->fn->interface && u->fn->interface->name) {
+						char access_type[10] = "";
+						if (u->c & c_read) strcat(access_type, "read");
+						if (u->c & c_write) strcat(access_type, "write");
+						print_a_caller(&first_variable_detail, u->fn->interface->name, u->fn->name, access_type);
+					}
+				}
+				decrease_indent();
+			}
+			print_a_end(FALSE);
 		}
 	}
 }
@@ -162,10 +186,10 @@ void process_module_for_variables (const char *name, declaration dlist) {
 	strcat(key, "__variables");
 	print_key(&first_interface, key);
 	print_beg();
-	indent_length += 2;
+	increase_indent();
 	scan_declaration (d, dlist)
 		process_declaration(d);
-	indent_length -= 2;
+	decrease_indent();
 	print_end(TRUE);
 }
 
@@ -180,13 +204,13 @@ void process_module_for_data(nesc_declaration mod) {
 	print_key(&first_module, mod->name);
 	print_beg();
 	first_interface = TRUE;
-	indent_length += 2;
+	increase_indent();
 	while (env_next(&scanifs, &ifname, &ifentry)) {
 		process_interface_for_data(ifname, ifentry);
 	}
 	first_decl = TRUE;
 	process_module_for_variables(mod->name, CAST(module, mod->impl)->decls);
-	indent_length -= 2;
+	decrease_indent();
 	print_end(TRUE);
 
 	if (debug) printf("\n");
@@ -199,7 +223,7 @@ void get_data(dd_list modules) {
 	fp = fopen(fname, "w");
 
 	fprintf(fp, "{\n");
-	indent_length += 2;
+	increase_indent();
 	dd_scan (mod, modules)
 		process_module_for_data(DD_GET(nesc_declaration, mod));
 
