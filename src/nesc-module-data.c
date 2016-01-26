@@ -122,6 +122,21 @@ void process_function_for_data(const char *fnname, data_declaration fndecl) {
 					break;
 				}
 				print_a_caller(&first_caller, ftype, u->fn->interface->name, u->fn->name);
+			} else if (u && u->fn && u->fn->name) { // && u->fn->container && u->fn->container->name && !strcmp(u->fn->container->name, "RealMainP")) {
+				char ftype[7] = "";
+				switch(fndecl->ftype) {
+				case function_event:
+					if (debug) printf("      Signalled by %s of %s\n", u->fn->name, u->fn->name);
+					strcat(ftype, "signal");
+					break;
+				case function_command:
+					if (debug) printf("      Called by %s of %s\n", u->fn->name, u->fn->name);
+					strcat(ftype, "call");
+					break;
+				default:
+					break;
+				}
+				print_a_caller(&first_caller, ftype, "__function", u->fn->name);
 			}
 		}
 		decrease_indent();
@@ -194,7 +209,7 @@ void process_module_for_variables (const char *name, declaration dlist) {
 }
 
 void process_module_for_data(nesc_declaration mod) {
-//	if (debug && strcmp(mod->name, "BlinkC")) return;
+//	if (debug && strcmp(mod->name, "RealMainP")) return;
 	if (debug) printf("Processing module %s\n", mod->name);
 	env_scanner scanifs;
 	const char *ifname;
