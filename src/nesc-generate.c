@@ -1260,6 +1260,22 @@ void generate_c_code(const char *target_name, nesc_declaration program,
   cgraph callgraph;
   FILE *output = NULL, *diff_file = NULL;
 
+  dd_list_pos com;
+  int counter = 0;
+
+  dd_scan (mod, modules)
+  {
+    nesc_declaration m = DD_GET(nesc_declaration, mod);
+
+    printf ("%d. %s no one else\n", counter++, m->name);
+  }
+  printf("Com\n");
+  dd_scan (com, components) {
+	  nesc_declaration m = DD_GET(nesc_declaration, com);
+	  printf ("%d. %s no one else\n", counter++, m->name);
+  }
+
+
   if (target_name)
   {
     output = fopen(target_name, "w");
